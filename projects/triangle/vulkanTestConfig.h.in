@@ -1,3 +1,0 @@
-// the configured options and settings
-#define VulkanMake_VERSION_MAJOR @VulkanMake_VERSION_MAJOR@
-#define VulkanMake_VERSION_MINOR @VulkanMake_VERSION_MINOR@

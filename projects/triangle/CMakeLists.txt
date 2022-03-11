@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 3.22)
 #set project
-project(triangle VERSION 1.0)
-
-configure_file(vulkanTestConfig.h.in vulkanTestConfig.h)
-
-
-# add executable
-add_executable(VulkanMake main.cpp)
+project(HelloTriangle VERSION 1.0)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+configure_file(helloTriangle.h.in include/helloTriangle.h @ONLY)
+
+
+# add executable
+add_executable(triangleT helloTriangle.cpp)
+
 
 
 #set path for find modules  see below for another way to set the path 
@@ -23,7 +23,6 @@ set_property(CACHE ROOT_DIR_WIN PROPERTY STRINGS
 	"F:" "C:") 
 message(STATUS "Root dir: " ${ROOT_DIR_WIN})
 
-message(STATUS "Root dir: " ${ROOT_DIR_WIN})
 cmake_path(APPEND glfw_full_path ${ROOT_DIR_WIN} "Program Files" "glfw"
 "install")
 cmake_path(APPEND glm_full_path ${ROOT_DIR_WIN} "Program Files" "glm" 
@@ -41,15 +40,15 @@ if (WIN32)
 endif()
 
 
-target_include_directories(VulkanMake PUBLIC "${PROJECT_BINARY_DIR}"
+target_include_directories(triangleT PUBLIC "${PROJECT_BINARY_DIR}/include"
 	${EXTRA_INCLUDES})
 find_package(glfw3 3.3 REQUIRED)
 
 find_package(Vulkan  REQUIRED)
 if (Vulkan_FOUND)
-	target_link_libraries(VulkanMake PRIVATE glfw Vulkan::Vulkan)
+	target_link_libraries(triangleT PRIVATE glfw Vulkan::Vulkan)
 else()
-	target_link_libraries(VulkanMake glfw)
+	target_link_libraries(triangleT glfw)
 endif()
 
 

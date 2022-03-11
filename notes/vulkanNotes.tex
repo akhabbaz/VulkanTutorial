@@ -1,0 +1,24 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\title{Vulkan Notes}
+\author{Anton Khabbaz}
+
+\begin{document}
+\maketitle
+\section{GLFW Commands}
+\begin{description}
+\item[ glfwInit()] initialize window
+\item[glfwWindowHint()] set properties of the window Some are:
+	\begin{itemize}
+		\item \verb|GLFW_CLIENT_API, GLFW_NO_API| do not create an
+OpenGL context.
+		\item \verb|GLFW_RESIZABLE, GLFW_FALSE| do not allow resizing of
+windows.
+	\end{itemize}
+\item [glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr)] create a window
+and return a pointer to it.  First two must be width and height, next is name.
+The fourth parameter allows you to optionally specify a monitor to open the
+window on and the last parameter is only relevant to OpenGL.	
+\end{description}
+\end{document}

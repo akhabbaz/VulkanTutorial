@@ -3,7 +3,9 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
-
+#include "helloTriangle.h"
+const uint32_t WIDTH = 800;
+const uint32_t HEIGHT = 600;
 class HelloTriangleApplication {
 public:
     void run() {
@@ -13,20 +15,28 @@ public:
     }
 
 private:
+    GLFWwindow* window;
     void initVulkan() {
+          
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
 	     }
-		
+	     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);	
     }
 
     void mainLoop() {
-
+		while (!glfwWindowShouldClose(window)) {
+			glfwPollEvents();
+		}
+	
     }
 
     void cleanup() {
-	glfwTerminate(void);
+        glfwDestroyWindow(window);
+	glfwTerminate();
 
     }
 };

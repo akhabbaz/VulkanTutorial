@@ -1,2 +1,5 @@
-*.html
-ads.txt
+# ignore intermediate latex files
+*.log
+*.aux
+*.toc
+*.out
