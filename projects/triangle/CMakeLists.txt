@@ -22,10 +22,10 @@ set(ROOT_DIR_WIN "F:" CACHE STRING
 set_property(CACHE ROOT_DIR_WIN PROPERTY STRINGS
 	"F:" "C:") 
 message(STATUS "Root dir: " ${ROOT_DIR_WIN})
-
-cmake_path(APPEND glfw_full_path ${ROOT_DIR_WIN} "Program Files" "glfw"
+cmake_path(SET rootPath  "${ROOT_DIR_WIN}")
+cmake_path(APPEND glfw_full_path "${rootPath}/Program Files" "glfw"
 "install")
-cmake_path(APPEND glm_full_path ${ROOT_DIR_WIN} "Program Files" "glm" 
+cmake_path(APPEND glm_full_path "${rootPath}/Program Files" "glm" 
 	"install" "include")
 
 # Vulkan::Vulkan finds the file object and all the include directories

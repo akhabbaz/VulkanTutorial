@@ -16,8 +16,9 @@ public:
 
 private:
     GLFWwindow* window;
+    VkInstance instance;
     void initVulkan() {
-          
+            createInstance();
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -26,7 +27,15 @@ private:
 	     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);	
     }
-
+    void createInstance(){
+	    VkApplicationInfo appInfo{};
+	    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
+	    appInfo.pApplicationName = "Hello Triangle";
+	    appInfo.applicationVersion = VK_MAKE_VERSION(1,0,0);
+	    appInfo.pEngineName = "No Engine";
+	    appInfo.engineVresion = VK_MAKE_VERSION(1, 0, 0);
+	    appInfo.apiVersion = VK_API_VERSION_1_0;
+    }
     void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
