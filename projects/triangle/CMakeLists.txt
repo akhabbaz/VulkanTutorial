@@ -16,16 +16,16 @@ add_executable(triangleT helloTriangle.cpp)
 #set path for find modules  see below for another way to set the path 
 #create variable which is stored in the CACHE to determine root directory
 # for windows.  The root directory is always F: or C: with colon.
-set(ROOT_DIR_WIN "F:" CACHE STRING 
+set(ROOT_DIR_WIN "F" CACHE STRING 
 	"Select Root directory for Windows Installs")
 # installs are only F or C for now.
 set_property(CACHE ROOT_DIR_WIN PROPERTY STRINGS
-	"F:" "C:") 
-message(STATUS "Root dir: " ${ROOT_DIR_WIN})
-cmake_path(SET rootPath  "${ROOT_DIR_WIN}")
-cmake_path(APPEND glfw_full_path "${rootPath}/Program Files" "glfw"
+	"F" "C") 
+cmake_path(SET rootPath NORMALIZE "${ROOT_DIR_WIN}:/")
+message("Root path is \"${rootPath}\"")
+cmake_path(APPEND glfw_full_path "${rootPath}" "Program Files" "glfw"
 "install")
-cmake_path(APPEND glm_full_path "${rootPath}/Program Files" "glm" 
+cmake_path(APPEND glm_full_path "${rootPath}" "Program Files" "glm" 
 	"install" "include")
 
 # Vulkan::Vulkan finds the file object and all the include directories

@@ -21,4 +21,27 @@ and return a pointer to it.  First two must be width and height, next is name.
 The fourth parameter allows you to optionally specify a monitor to open the
 window on and the last parameter is only relevant to OpenGL.	
 \end{description}
+\section{Initialization Commands and Structures}
+This follows from the
+\href{https://vulkan-tutorial.com/en/Drawing\_a\_triangle/Setup/Instance}{drawingTriangle}
+and the initial chapter of VulkanProgramming Guide(OpenGL).  
+
+To create an instance of a structure in Vulkan one uses
+\begin{verbatim}
+VkResult vKCreateInstance( 
+	const vkInstanceCreateInfo*        pcreateInfo,
+	const vKAllocationCallbacks*       pAllocator,
+	VkInstance*			   pInstance);
+\end{verbatim}
+
+The structure inputted is a constant so that is only a source of information, and the
+instance returns the resulting instance data.
+
+The OpenGL programming guide uses the following convention:
+\begin{description}
+	\item[pInstance]  pointer to instance
+	\item[ppEnabledExtensionNames] pointer to pointer to type in this case a
+		const char.
+\end{description}
+
 \end{document}
