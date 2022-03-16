@@ -3,6 +3,7 @@
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
+#include <vector>
 #include "helloTriangle.h"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -54,7 +55,7 @@ private:
 	    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
 				nullptr);
 	    std::vector<VkExtensionProperties> extensions(extensionCount);
-            vkEnumerateInstanceExtensionProperites(nullptr, &extensionCount, 
+            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, 
 			extensions.data());
 	    std::cout << "available extensions:\n";
 	    for (const auto& extension: extensions){

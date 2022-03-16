@@ -23,10 +23,10 @@ set_property(CACHE ROOT_DIR_WIN PROPERTY STRINGS
 	"F" "C") 
 cmake_path(SET rootPath NORMALIZE "${ROOT_DIR_WIN}:/")
 cmake_path(GET rootPath ROOT_PATH rootDir)
-message("Root path is \"${rootPath}\"")
-cmake_path(APPEND glfw_full_path "${rootPath}" "Program Files" "glfw"
+message("Root path is \"${rootDir}\"")
+cmake_path(APPEND glfw_full_path "${rootDir}" "Program Files" "glfw"
 "install")
-cmake_path(APPEND glm_full_path "${rootPath}" "Program Files" "glm" 
+cmake_path(APPEND glm_full_path "${rootDir}" "Program Files" "glm" 
 	"install" "include")
 
 message(STATUS "glfw full path: " ${glfw_full_path})
