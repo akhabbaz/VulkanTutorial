@@ -61,6 +61,19 @@ private:
 	    for (const auto& extension: extensions){
 		std::cout << '\t' << extension.extensionName << '\n';
 	    }
+	    // check if required extensions are there:
+	   std::cout << glfwExtensionCount << " extensions Required. They are:\n";
+	   for (uint32_t i = 0; i < createInfo.enabledExtensionCount; ++i){
+		std::cout << '\t' << createInfo.ppEnabledExtensionNames[i] <<
+			'\t';
+		bool found{};
+		for (const auto& extension:extensions){
+			if (extension.extensionName  == createInfo.ppEnabledExtensionNames[i]){
+				found = true;
+			}
+		}
+		std::cout << (found? "Found": "Not Found") << std::endl;
+	    }
 
     }
     void mainLoop() {
