@@ -4,9 +4,20 @@
 #include <stdexcept>
 #include <cstdlib>
 #include <vector>
+#include <cstring>
 #include "helloTriangle.h"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
+//from Validation layer section
+const std::vector<const char*> validationLayers = {
+	"VK_LAYER_KHRONOS_validation"
+};
+#ifdef NDEBUG
+	const bool enableValidationLayers = false;
+#else
+	const bool enableValidationLayers = true;
+#endif
+// check which validation layers are available.
 class HelloTriangleApplication {
 public:
     void run() {
@@ -18,6 +29,7 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
+    bool checkValidationLayerSupport();
     void initVulkan() {
             createInstance();
 	    if(!glfwInit())
@@ -30,6 +42,12 @@ private:
 
     }
     void createInstance(){
+	    if (enableValidationLayers){
+		    std::cout<< "Validation Layers enabled" << std::endl;
+		    if (!checkValidationLayerSupport()){
+			    throw std::runtime_error("validation layers requested, but not available");
+		    }
+	    }
 	    VkApplicationInfo appInfo{};
 	    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	    appInfo.pApplicationName = "Hello Triangle";
@@ -48,6 +66,13 @@ private:
 
 	    createInfo.enabledExtensionCount = glfwExtensionCount;
 	    createInfo.ppEnabledExtensionNames = glfwExtensions;
+	    if (enableValidationLayers){
+		    createInfo.enabledLayerCount = 
+			    	static_cast<uint32_t>(validationLayers.size());
+		    createInfo.ppEnabledLayerNames = validationLayers.data();
+	    } else {
+		    createInfo.enabledLayerCount = 0;
+	    }
 	    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS){
 		    	throw std::runtime_error("failed to create instance!");
 	    }
@@ -68,7 +93,7 @@ private:
 			'\t';
 		bool found{};
 		for (const auto& extension:extensions){
-			if (extension.extensionName  == createInfo.ppEnabledExtensionNames[i]){
+			if (strcmp(extension.extensionName, createInfo.ppEnabledExtensionNames[i])== 0){
 				found = true;
 			}
 		}
@@ -100,6 +125,25 @@ int main() {
         std::cerr << e.what() << std::endl;
         return EXIT_FAILURE;
     }
-
     return EXIT_SUCCESS;
+}
+bool HelloTriangleApplication::checkValidationLayerSupport() {
+	uint32_t layerCount;
+	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+	std::vector<VkLayerProperties> availableLayers(layerCount);
+	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+	
+	for (const char* layerName: validationLayers){
+		bool layerFound = false;
+		for (const auto& layerProperties : availableLayers){
+			if (strcmp(layerName, layerProperties.layerName) == 0) {
+				layerFound = true;
+				break;
+			}
+		}
+		if (!layerFound){
+			return false;
+		}
+	}		
+	return true;
 }
