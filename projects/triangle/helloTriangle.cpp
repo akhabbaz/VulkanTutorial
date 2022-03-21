@@ -8,8 +8,9 @@
 #include "helloTriangle.h"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
-//from Validation layer section
+//
 const std::vector<const char*> validationLayers = {
+//This layer has standard Vulkan validation functions
 	"VK_LAYER_KHRONOS_validation"
 };
 #ifdef NDEBUG
@@ -18,6 +19,12 @@ const std::vector<const char*> validationLayers = {
 	const bool enableValidationLayers = true;
 #endif
 // check which validation layers are available.
+
+
+bool checkValidationLayerSupport();
+
+//returns all required extensions including glfw extensions and layers
+std::vector<const char*> getRequiredExtensions() {
 class HelloTriangleApplication {
 public:
     void run() {
@@ -29,7 +36,6 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
-    bool checkValidationLayerSupport();
     void initVulkan() {
             createInstance();
 	    if(!glfwInit())
@@ -127,9 +133,12 @@ int main() {
     }
     return EXIT_SUCCESS;
 }
-bool HelloTriangleApplication::checkValidationLayerSupport() {
+// returns true if all the layers requested are available. False otherwise
+bool checkValidationLayerSupport() {
 	uint32_t layerCount;
+// List all of the available layers 
 	vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
 	
