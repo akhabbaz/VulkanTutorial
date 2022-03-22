@@ -22,9 +22,11 @@ const std::vector<const char*> validationLayers = {
 
 
 bool checkValidationLayerSupport();
-
 //returns all required extensions including glfw extensions and layers
-std::vector<const char*> getRequiredExtensions() {
+std::vector<const char*> getRequiredExtensions();
+
+//check that required extensions are actually there.
+void requiredExtensionsFound(VkInstanceCreateInfo& createInfo);
 class HelloTriangleApplication {
 public:
     void run() {
@@ -65,13 +67,12 @@ private:
 	    VkInstanceCreateInfo createInfo{};
 	    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	    createInfo.pApplicationInfo = &appInfo;
-	    uint32_t glfwExtensionCount = 0;
-	    const char** glfwExtensions;
-
-	    glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
-
-	    createInfo.enabledExtensionCount = glfwExtensionCount;
-	    createInfo.ppEnabledExtensionNames = glfwExtensions;
+	    //use routine below to get required and call back extensions
+	    auto extensions = getRequiredExtensions();
+	
+	    createInfo.enabledExtensionCount =
+			static_cast<uint32_t>(extensions.size());
+	    createInfo.ppEnabledExtensionNames = extensions.data();
 	    if (enableValidationLayers){
 		    createInfo.enabledLayerCount = 
 			    	static_cast<uint32_t>(validationLayers.size());
@@ -82,30 +83,8 @@ private:
 	    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS){
 		    	throw std::runtime_error("failed to create instance!");
 	    }
-	    uint32_t extensionCount = 0;
-	    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
-				nullptr);
-	    std::vector<VkExtensionProperties> extensions(extensionCount);
-            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, 
-			extensions.data());
-	    std::cout << "available extensions:\n";
-	    for (const auto& extension: extensions){
-		std::cout << '\t' << extension.extensionName << '\n';
-	    }
-	    // check if required extensions are there:
-	   std::cout << glfwExtensionCount << " extensions Required. They are:\n";
-	   for (uint32_t i = 0; i < createInfo.enabledExtensionCount; ++i){
-		std::cout << '\t' << createInfo.ppEnabledExtensionNames[i] <<
-			'\t';
-		bool found{};
-		for (const auto& extension:extensions){
-			if (strcmp(extension.extensionName, createInfo.ppEnabledExtensionNames[i])== 0){
-				found = true;
-			}
-		}
-		std::cout << (found? "Found": "Not Found") << std::endl;
-	    }
-
+	    // checks if required Extensions are found.
+	    requiredExtensionsFound(createInfo);
     }
     void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
@@ -166,6 +145,9 @@ std::vector<const char*> getRequiredExtensions() {
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
     if (enableValidationLayers) {
+//	This sets up a debug messenger iwth a callback. The macro below becomes
+//	the string literal "VK_EXT_debug_utils" 
+
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
     std::cout << "Required Extensions:" << std::endl;
@@ -173,4 +155,41 @@ std::vector<const char*> getRequiredExtensions() {
 	std::cout << oneExt << '\t';
     std::cout << std::endl;
     return extensions;
+}
+
+//check that required extensions are actually there. 
+// This routine first lists all available extensions and makes sure that enabled
+// extensions are actually there.
+void requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
+{	    
+	   // extensions are all the extensions available on the system.
+           // createInfo.ppEnabledExtensionNames stores the names of the
+           // extensions enabled.  All those enabled should be available.
+	    uint32_t extensionCount = 0;
+	    vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount,
+				nullptr);
+	    std::vector<VkExtensionProperties> extensions(extensionCount);
+            vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, 
+			extensions.data());
+	    std::cout << "available extensions:\n";
+	    for (const auto& extension: extensions){
+		std::cout << '\t' << extension.extensionName << '\n';
+	    }
+	    // check if required extensions are there:
+	   std::cout << createInfo.enabledExtensionCount  << " extensions Required. They are:\n";
+	   for (uint32_t i = 0; i < createInfo.enabledExtensionCount; ++i){
+		std::cout << '\t' << createInfo.ppEnabledExtensionNames[i] <<
+			'\t';
+		bool found{};
+		for (const auto& extension:extensions){
+			if (strcmp(extension.extensionName, createInfo.ppEnabledExtensionNames[i])== 0){
+				found = true;
+			}
+		}
+		std::cout << (found? "Found": "Not Found") << std::endl;
+		if (!found){
+			throw std::runtime_error("Required Extension Not"
+						" Found");
+		}
+	  }
 }
