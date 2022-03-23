@@ -26,7 +26,26 @@ bool checkValidationLayerSupport();
 std::vector<const char*> getRequiredExtensions();
 
 //check that required extensions are actually there.
-void requiredExtensionsFound(VkInstanceCreateInfo& createInfo);
+bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo);
+
+// debugCallback with a standard signature.
+//VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
+//this has the correct signature so Vulkan can call it.
+//
+// first parameter looks like an enum describing error levels. The higher they
+// are the more severe.
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData);
+
+
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, 
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+    	const VkAllocationCallbacks* pAllocator, 
+          VkDebugUtilsMessengerEXT* pDebugMessenger); 
+
 class HelloTriangleApplication {
 public:
     void run() {
@@ -38,8 +57,10 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
+    VkDebugUtilsMessengerEXT debugMessenger;
     void initVulkan() {
             createInstance();
+	    setupDebugMessenger();
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -49,6 +70,20 @@ private:
 	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 
     }
+    void setupDebugMessenger(){
+	if (!enableValidationLayers) return;
+	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+	//VK_STRUCTURE_TYPE is a signature for sType field.
+	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
+			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr; // Optional    
+}
     void createInstance(){
 	    if (enableValidationLayers){
 		    std::cout<< "Validation Layers enabled" << std::endl;
@@ -84,7 +119,9 @@ private:
 		    	throw std::runtime_error("failed to create instance!");
 	    }
 	    // checks if required Extensions are found.
-	    requiredExtensionsFound(createInfo);
+	    if (!requiredExtensionsFound(createInfo)){
+		throw std::runtime_error("Required extensions not found!");
+	    }
     }
     void mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
@@ -160,7 +197,7 @@ std::vector<const char*> getRequiredExtensions() {
 //check that required extensions are actually there. 
 // This routine first lists all available extensions and makes sure that enabled
 // extensions are actually there.
-void requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
+bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 {	    
 	   // extensions are all the extensions available on the system.
            // createInfo.ppEnabledExtensionNames stores the names of the
@@ -188,8 +225,35 @@ void requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 		}
 		std::cout << (found? "Found": "Not Found") << std::endl;
 		if (!found){
-			throw std::runtime_error("Required Extension Not"
-						" Found");
+			return found;
 		}
 	  }
+	  return true;
 }
+// debugCallback with a standard signature.
+//VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
+//this has the correct signature so Vulkan can call it.
+//
+// first parameter looks like an enum describing error levels. The higher they
+// are the more severe.
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+
+    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+    return VK_FALSE;
+}
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, 
+			"vkCreateDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+    } else {
+        return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+
