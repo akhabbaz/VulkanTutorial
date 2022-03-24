@@ -16,14 +16,15 @@ OpenGL context.
 		\item \verb|GLFW_RESIZABLE, GLFW_FALSE| do not allow resizing of
 windows.
 	\end{itemize}
-\item [glfwCreateWindow(800, 600, "Vulkan", nullptr, nullptr)] create a window
+\item [glfwCreateWindow()] with argument 
+ (800, 600, "Vulkan", nullptr, nullptr) creates a window
 and return a pointer to it.  First two must be width and height, next is name.
 The fourth parameter allows you to optionally specify a monitor to open the
 window on and the last parameter is only relevant to OpenGL.	
 \end{description}
 \section{Initialization Commands and Structures}
 This follows from the
-\href{https://vulkan-tutorial.com/en/Drawing\_a\_triangle/Setup/Instance}{drawingTriangle}
+\href{https://vulkan-tutorial.com/en/Drawing\_a\_triangle/Setup/Instance}{Triangle}
 and the initial chapter of VulkanProgramming Guide(OpenGL).  
 
 To create an instance of a structure in Vulkan one uses
@@ -35,7 +36,8 @@ VkResult vKCreateInstance(
 \end{verbatim}
 
 The structure inputted is a constant so that is only a source of information, and the
-instance returns the resulting instance data.
+instance returns the resulting instance data.  The \emph{instance} holds all the
+tracked states of the application.
 
 The OpenGL programming guide uses the following convention:
 \begin{description}

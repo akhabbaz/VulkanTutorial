@@ -40,11 +40,15 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData);
 
-
+//create pointer to DebugMessenger function
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, 
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
     	const VkAllocationCallbacks* pAllocator, 
-          VkDebugUtilsMessengerEXT* pDebugMessenger); 
+          VkDebugUtilsMessengerEXT* pDebugMessenger);
+//destroy the debugMessenger function 
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, 
+     VkDebugUtilsMessengerEXT debugMessenger, 
+	const VkAllocationCallbacks* pAllocator);
 
 class HelloTriangleApplication {
 public:
@@ -70,6 +74,22 @@ private:
 	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 
     }
+    // debugCallback with a standard signature.
+    //VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
+    //this has the correct signature so Vulkan can call it.
+    //
+    // first parameter looks like an enum describing error levels. The higher they
+    // are the more severe.
+    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+        VkDebugUtilsMessageTypeFlagsEXT messageType,
+        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+        void* pUserData) {
+    
+        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+    
+        return VK_FALSE;
+    }
     void setupDebugMessenger(){
 	if (!enableValidationLayers) return;
 	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
@@ -82,7 +102,11 @@ private:
 			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
                                  VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
         createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData = nullptr; // Optional    
+        createInfo.pUserData = nullptr; // Optional   
+      	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+    		throw std::runtime_error("failed to set up debug messenger!");
+}
+ 
 }
     void createInstance(){
 	    if (enableValidationLayers){
@@ -131,6 +155,9 @@ private:
     }
 
     void cleanup() {
+	if (enableValidationLayers) {
+        	DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+    	}
         vkDestroyInstance(instance, nullptr);
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -230,22 +257,6 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 	  }
 	  return true;
 }
-// debugCallback with a standard signature.
-//VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
-//this has the correct signature so Vulkan can call it.
-//
-// first parameter looks like an enum describing error levels. The higher they
-// are the more severe.
-static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-    VkDebugUtilsMessageTypeFlagsEXT messageType,
-    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData) {
-
-    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
-    return VK_FALSE;
-}
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
     const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, 
@@ -254,6 +265,14 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
     } else {
         return VK_ERROR_EXTENSION_NOT_PRESENT;
+    }
+}
+//destroy function.
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, 
+const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        func(instance, debugMessenger, pAllocator);
     }
 }
 
