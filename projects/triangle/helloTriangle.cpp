@@ -258,7 +258,12 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 }
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
     const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
-    auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, 
+    
+//vkGetInstanceProcAddr gets a pointer to any function in Vulkan.  The
+//parentheses cast that pointer which is of type  PFN_vkVoidFunction to the type
+//of the function you want.  Somehow auto figures this out.
+
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, 
 			"vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
         return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
