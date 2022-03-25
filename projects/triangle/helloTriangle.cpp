@@ -19,8 +19,6 @@ const std::vector<const char*> validationLayers = {
 	const bool enableValidationLayers = true;
 #endif
 // check which validation layers are available.
-
-
 bool checkValidationLayerSupport();
 //returns all required extensions including glfw extensions and layers
 std::vector<const char*> getRequiredExtensions();
@@ -199,7 +197,8 @@ bool checkValidationLayerSupport() {
 	}		
 	return true;
 }
-
+//gets glfw required extensions and addes extensions requested for validation
+//layers
 std::vector<const char*> getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
