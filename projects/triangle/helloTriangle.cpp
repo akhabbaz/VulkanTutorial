@@ -36,8 +36,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-    void* pUserData);
-
+     void* pUserData);
 //create pointer to DebugMessenger function
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, 
 	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
@@ -47,7 +46,9 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, 
      VkDebugUtilsMessengerEXT debugMessenger, 
 	const VkAllocationCallbacks* pAllocator);
-
+//populate DebugMessengerCReateInfo
+void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
+createInfo);
 class HelloTriangleApplication {
 public:
     void run() {
@@ -72,36 +73,12 @@ private:
 	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
 
     }
-    // debugCallback with a standard signature.
-    //VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
-    //this has the correct signature so Vulkan can call it.
-    //
-    // first parameter looks like an enum describing error levels. The higher they
-    // are the more severe.
-    static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
-        VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-        VkDebugUtilsMessageTypeFlagsEXT messageType,
-        const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-        void* pUserData) {
-    
-        std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-    
-        return VK_FALSE;
-    }
     void setupDebugMessenger(){
 	if (!enableValidationLayers) return;
 	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-	//VK_STRUCTURE_TYPE is a signature for sType field.
-	createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
-				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
-                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
-			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData = nullptr; // Optional   
-      	if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
+        
+       populateDebugMessengerCreateInfo(createInfo);
+       if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
     		throw std::runtime_error("failed to set up debug messenger!");
 }
  
@@ -114,6 +91,10 @@ private:
 		    }
 	    }
 	    VkApplicationInfo appInfo{};
+            //appInfo, createInfo and debugCreateInfo are structs declared here
+            //and would be destroyed after createInstance closes.  But These are
+            //inputs to vkCreateInstance so information here gets copied to
+            //instance a class member that has a longer lifetime.
 	    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 	    appInfo.pApplicationName = "Hello Triangle";
 	    appInfo.applicationVersion = VK_MAKE_VERSION(1,0,0);
@@ -130,12 +111,22 @@ private:
 	    createInfo.enabledExtensionCount =
 			static_cast<uint32_t>(extensions.size());
 	    createInfo.ppEnabledExtensionNames = extensions.data();
+	    // add debugging for instance creation.
+	    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
 	    if (enableValidationLayers){
 		    createInfo.enabledLayerCount = 
 			    	static_cast<uint32_t>(validationLayers.size());
 		    createInfo.ppEnabledLayerNames = validationLayers.data();
+                    // add Debug messenger data here
+		    populateDebugMessengerCreateInfo(debugCreateInfo);
+	            // pNext is a type const void*, a pointer to void. The
+	            // pointer to debugCreateInfo is cast to a pointer of the
+	            // same type.  I think this cast is for clarity.
+		    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
+					&debugCreateInfo; 
 	    } else {
 		    createInfo.enabledLayerCount = 0;
+		    createInfo.pNext  = nullptr;
 	    }
 	    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS){
 		    	throw std::runtime_error("failed to create instance!");
@@ -279,4 +270,33 @@ const VkAllocationCallbacks* pAllocator) {
         func(instance, debugMessenger, pAllocator);
     }
 }
+void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+    createInfo = {};
+    //VK_STRUCTURE_TYPE is a signature for sType field.
+	createInfo.sType  = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
+			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr; // Optional   
+}
 
+// debugCallback with a standard signature.
+//VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
+//this has the correct signature so Vulkan can call it.
+//
+// first parameter looks like an enum describing error levels. The higher they
+// are the more severe.
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) {
+
+    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
+
+    return VK_FALSE;
+}
