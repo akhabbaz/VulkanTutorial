@@ -61,12 +61,9 @@ private:
     GLFWwindow* window;
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
-    VkPhysicalDevice physicalDevice {VK_NULL_HANDLE};
-    void pickPhysicalDevice(void);
     void initVulkan() {
             createInstance();
 	    setupDebugMessenger();
-	    pickPhysicalDevice();	    
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -154,17 +151,6 @@ private:
 	glfwDestroyWindow(window);
 	glfwTerminate();
 
-    }
-    void pickPhysicalDevice(void){
-           uint32_t deviceCount = 0;
-	   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-           if (deviceCount == 0) {
-		throw std::runtime_error("failed to find GPUs with Vulkan"
-			"support!");
-	   }
-	   std::vector<VkPhysicalDevice> devices(deviceCount);
-	   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-	
     }
 };
 
