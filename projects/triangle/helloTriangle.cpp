@@ -46,9 +46,15 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance,
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, 
      VkDebugUtilsMessengerEXT debugMessenger, 
 	const VkAllocationCallbacks* pAllocator);
+
+
 //populate DebugMessengerCReateInfo
 void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
 createInfo);
+
+//create a device check function
+bool isDeviceSuitable(VkPhysicalDevice device);
+
 class HelloTriangleApplication {
 public:
     void run() {
@@ -60,10 +66,11 @@ public:
 private:
     GLFWwindow* window;
     VkInstance instance;
-    VkDebugUtilsMessengerEXT debugMessenger;
+    VkDebugUtilsMessengerEXT debugMessenger; 
+    // in C++ 11 members can be initialized like this.
     VkPhysicalDevice physicalDevice {VK_NULL_HANDLE};
     void pickPhysicalDevice(void);
-    void initVulkan() {
+    void initVulkan(void) {
             createInstance();
 	    setupDebugMessenger();
 	    pickPhysicalDevice();	    
@@ -155,17 +162,6 @@ private:
 	glfwTerminate();
 
     }
-    void pickPhysicalDevice(void){
-           uint32_t deviceCount = 0;
-	   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
-           if (deviceCount == 0) {
-		throw std::runtime_error("failed to find GPUs with Vulkan"
-			"support!");
-	   }
-	   std::vector<VkPhysicalDevice> devices(deviceCount);
-	   vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
-	
-    }
 };
 
 int main() {
@@ -179,6 +175,37 @@ int main() {
     }
     return EXIT_SUCCESS;
 }
+
+void HelloTriangleApplication::pickPhysicalDevice(void){
+           uint32_t deviceCount = 0;
+	   // this could be initialized with the max number of devices the
+	   // instance can handle.
+	   vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+           if (deviceCount == 0) {
+		throw std::runtime_error("failed to find GPUs with Vulkan"
+			"support!");
+	   }
+	   std::vector<VkPhysicalDevice> devices(deviceCount);
+	   // returns VK_SUCCESS
+	   VkResult result =
+	   	vkEnumeratePhysicalDevices(instance, 
+			&deviceCount, devices.data());
+	   if (result != VK_SUCCESS) {
+		throw std::runtime_error(
+			"failed to enumerate physical devices");
+           }
+
+	   for (const auto& device :devices){
+		if (isDeviceSuitable(device)) {
+		 	physicalDevice = device;
+			break;
+		}
+	   }
+	   if (physicalDevice == VK_NULL_HANDLE){
+		throw std::runtime_error("failed to find a suitable GPU!");
+	   }
+    }
+
 // returns true if all the layers requested are available. False otherwise
 bool checkValidationLayerSupport() {
 	uint32_t layerCount;
@@ -313,4 +340,16 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 
     return VK_FALSE;
+}
+
+
+//create a device check function
+bool isDeviceSuitable(VkPhysicalDevice device){
+	VkPhysicalDeviceProperties deviceProperties;
+        VkPhysicalDeviceFeatures deviceFeatures;
+	vkGetPhysicalDeviceProperties(device, &deviceProperties);
+	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
+	return deviceProperties.deviceType ==
+		VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
+		deviceFeatures.geometryShader;
 }
