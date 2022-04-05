@@ -5,6 +5,8 @@
 #include <cstdlib>
 #include <vector>
 #include <cstring>
+#include <optional> // adds has_value to any type to distinguish case of 
+		    // invalid entry or not initialized.
 #include "helloTriangle.h"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -54,6 +56,15 @@ createInfo);
 
 //create a device check function
 bool isDeviceSuitable(VkPhysicalDevice device);
+
+//find appropriate queue for graphics commands
+uint32_t findQueueFamilies(VkPhysicalDevice device);
+
+//holds indices into Queue families
+struct queueFamilyIndices{
+	std::optional<uint32_t> graphicsFamily;
+};
+
 
 class HelloTriangleApplication {
 public:
@@ -352,4 +363,10 @@ bool isDeviceSuitable(VkPhysicalDevice device){
 	return deviceProperties.deviceType ==
 		VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
 		deviceFeatures.geometryShader;
+}
+
+//find appropriate queue for graphics commands
+uint32_t findQueueFamilies(VkPhysicalDevice device){
+	QueueFamilyIndices indices;
+	return indices;
 }
