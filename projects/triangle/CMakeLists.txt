@@ -1,16 +1,19 @@
 cmake_minimum_required(VERSION 3.22)
 #set project
-project(HelloTriangle VERSION 1.1)
+project(Triangle VERSION 1.2)
 
 # C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
-configure_file(helloTriangle.h.in include/helloTriangle.h @ONLY)
+configure_file(triangleConfig.h.in include/triangleConfig.h @ONLY)
 
 
-# add executable
-add_executable(triangleT helloTriangle.cpp)
-
+# add executable  triangle has the helloTriangle class, and triangleMain has the
+# main run loop
+add_executable(triangleT triangle.cpp triangleMain.cpp)
+# include the source directory to find triangle.h. Linking is public so that
+# anyone who links to this target also gets the source_dir
+target_include_directories(triangleT PUBLIC "${PROJECT_SOURCE_DIR}")
 
 
 #set path for find modules  see below for another way to set the path 
