@@ -77,12 +77,7 @@ struct QueueFamilyIndices{
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
 class HelloTriangleApplication {
 public:
-    void run() {
-        initVulkan();
-        mainLoop();
-        cleanup();
-    }
-
+    void run();
 private:
     GLFWwindow* window;
     VkInstance instance;
@@ -90,97 +85,10 @@ private:
     // in C++ 11 members can be initialized like this.
     VkPhysicalDevice physicalDevice {VK_NULL_HANDLE};
     void pickPhysicalDevice(void);
-    void initVulkan(void) {
-            createInstance();
-	    setupDebugMessenger();
-	    pickPhysicalDevice();	    
-	    if(!glfwInit())
-	     {
-		throw std::runtime_error("init failed");
-	     }
-	     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-
-    }
-    void setupDebugMessenger(){
-	if (!enableValidationLayers) return;
-	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-        
-       populateDebugMessengerCreateInfo(createInfo);
-       if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS) {
-    		throw std::runtime_error("failed to set up debug messenger!");
-}
- 
-}
-    void createInstance(){
-	    if (enableValidationLayers){
-		    std::cout<< "Validation Layers enabled" << std::endl;
-		    if (!checkValidationLayerSupport()){
-			    throw std::runtime_error("validation layers requested, but not available");
-		    }
-	    }
-	    VkApplicationInfo appInfo{};
-            //appInfo, createInfo and debugCreateInfo are structs declared here
-            //and would be destroyed after createInstance closes.  But These are
-            //inputs to vkCreateInstance so information here gets copied to
-            //instance a class member that has a longer lifetime.
-	    appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-	    appInfo.pApplicationName = "Hello Triangle";
-	    appInfo.applicationVersion = VK_MAKE_VERSION(1,0,0);
-	    appInfo.pEngineName = "No Engine";
-	    appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-	    appInfo.apiVersion = VK_API_VERSION_1_0;
-
-	    VkInstanceCreateInfo createInfo{};
-	    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-	    createInfo.pApplicationInfo = &appInfo;
-	    //use routine below to get required and call back extensions
-	    auto extensions = getRequiredExtensions();
-	
-	    createInfo.enabledExtensionCount =
-			static_cast<uint32_t>(extensions.size());
-	    createInfo.ppEnabledExtensionNames = extensions.data();
-	    // add debugging for instance creation.
-	    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
-	    if (enableValidationLayers){
-		    createInfo.enabledLayerCount = 
-			    	static_cast<uint32_t>(validationLayers.size());
-		    createInfo.ppEnabledLayerNames = validationLayers.data();
-                    // add Debug messenger data here
-		    populateDebugMessengerCreateInfo(debugCreateInfo);
-	            // pNext is a type const void*, a pointer to void. The
-	            // pointer to debugCreateInfo is cast to a pointer of the
-	            // same type.  I think this cast is for clarity.
-		    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
-					&debugCreateInfo; 
-	    } else {
-		    createInfo.enabledLayerCount = 0;
-		    createInfo.pNext  = nullptr;
-	    }
-	    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS){
-		    	throw std::runtime_error("failed to create instance!");
-	    }
-	    // checks if required Extensions are found.
-	    if (!requiredExtensionsFound(createInfo)){
-		throw std::runtime_error("Required extensions not found!");
-	    }
-    }
-    void mainLoop() {
-		while (!glfwWindowShouldClose(window)) {
-			glfwPollEvents();
-		}
-	
-    }
-
-    void cleanup() {
-	if (enableValidationLayers) {
-        	DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
-    	}
-        vkDestroyInstance(instance, nullptr);
-	glfwDestroyWindow(window);
-	glfwTerminate();
-
-    }
+    void initVulkan(void);
+    void setupDebugMessenger(void); 
+    void createInstance(void);
+    void mainLoop(void);
+    void cleanup(void);
 };
 
