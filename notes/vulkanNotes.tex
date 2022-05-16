@@ -32,7 +32,7 @@ window on and the last parameter is only relevant to OpenGL.
 This follows from the
 \href{https://vulkan-tutorial.com/en/Drawing\_a\_triangle/Setup/Instance}{Triangle}
 and the initial chapter of VulkanProgramming Guide(OpenGL).  
-
+o
 To create an instance of a structure in Vulkan one uses
 \begin{verbatim}
 VkResult vKCreateInstance( 
@@ -51,5 +51,113 @@ The OpenGL programming guide uses the following convention:
 	\item[ppEnabledExtensionNames] pointer to pointer to type in this case a
 		const char.
 \end{description}
+\section{Vulkan Commands}
+
+\begin{description}
+    \item[vkEnumerateInstanceLayerProperties](\&layer\-Count,
+available\-Layers\-.data())
+    will check what layers are available and return in a vector. The struct is
+    \verb|VkLayerProperties|.  The layers need to be enabled.  \begin{verbatim}
+``VK\_LAYER\_KHRONOS\_validation''
+\end{verbatim}
+\item[vkEnumerateInstanceExtensionProperties] 
+	(nullptr, &extensionCount, 
+			extensions.data());
+ uses a struct \verb|VkExtensionProperties|. This returns all the extensions
+available to vulkan.
+
+\end{description}
+\section{Enhancing Vulkan}
+\begin{description}
+\item[Layers] are for
+debugging, parameter validation and logging and printing. Hello triangle uses
+one layer that starts many of them called  
+
+\item[Extensions]
+Adds features to vulkan by incorporating functions and software into the api.
+There are \emph{instance} extensions that enhance all of Vulkan, and
+\emph{Device} extensions that are only available on certain devices. These
+define new functions. GLFW needs specific extensions given by:
+\begin{verbatim}
+ glfwExtensions = glfwGetRequiredInstanceExtensions
+				(&glfwExtensionCount);
+\end{verbatim}
+\end{description}
+\section{debug Callbacks}
+Here is a summary of how you show error messages from Vulkan as a result.  The
+mechanism uses a callback that is a static function of the correct signature
+which vulkan calls whenever there is an event that  was requested. 
+
+First you populate a structure with vital information for the callback:
+\begin{verbatim}
+VkDebugUtilsMessengerCreateInfoEXT& createInfo;
+    //VK_STRUCTURE_TYPE is a signature for sType field.
+	createInfo.sType  = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
+			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr; // Optional   
+\end{verbatim}
+The messageSeverity field says what level of error should trigger the callback.
+The \verb|...VERBOSE_BIT_EXT| means show diagnostic messages. Each message is
+\begin{verbatim}
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT: Diagnostic message
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT: 
+		Informational message like the creation of a resource
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT: 
+		Message about behavior that is not necessarily an error, 
+		but very likely a bug in your application
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT: Message about behavior 
+		that is invalid and may cause crashes
+\end{verbatim}
+
+Notice there is a callback function to register.
+
+The actual callback has this signature:
+\begin{verbatim}
+
+// debugCallback with a standard signature.
+//VKAPI_ATTR VKAPI_CALL specify the argument order for the function, they say so
+//this has the correct signature so Vulkan can call it.
+//
+// first parameter looks like an enum describing error levels. The higher they
+// are the more severe.
+static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
+    VkDebugUtilsMessageTypeFlagsEXT messageType,
+    const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
+    void* pUserData) 
+\end{verbatim}
+This will get called whenever the message Severity is one of the selected types.
+
+First the callback function must be registered:
+\begin{verbatim}
+
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+    
+//vkGetInstanceProcAddr gets a pointer to any function in Vulkan.  The
+//parentheses cast that pointer which is of type  PFN_vkVoidFunction to the type
+//of the function you want.  Somehow auto figures this out.
+
+	auto func = (PFN_vkCreateDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, 
+			"vkCreateDebugUtilsMessengerEXT");
+    if (func != nullptr) {
+        return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
+\end{verbatim}
+The last func does the creation.  It needs the instance, the createInfo
+structure that specifies everything about the callback, and returns a
+pDebugMessenger pointer that should be saved.  After this I think the callback
+works.  
+
+In the hello Triangle code, pDebugMessenger is saved in the class.  There is
+also a pointer to the createInfo structure saved in pNext in the instance, but
+that does not seem needed at all at this stage.  Finally, you need to destroy
+the callback when its all through with another function call.
+
 
 \end{document}

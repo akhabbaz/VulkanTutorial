@@ -84,8 +84,11 @@ private:
     VkDebugUtilsMessengerEXT debugMessenger; 
     // in C++ 11 members can be initialized like this.
     VkPhysicalDevice physicalDevice {VK_NULL_HANDLE};
+    // logical device
+    VkDevice  device{};
     void pickPhysicalDevice(void);
     void initVulkan(void);
+    void createLogicalDevice();
     void setupDebugMessenger(void); 
     void createInstance(void);
     void mainLoop(void);

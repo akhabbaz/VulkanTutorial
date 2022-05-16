@@ -8,7 +8,8 @@ void HelloTriangleApplication::run() {
 void HelloTriangleApplication::initVulkan(void) {
             createInstance();
 	    setupDebugMessenger();
-	    pickPhysicalDevice();	    
+	    pickPhysicalDevice();
+            createLogicalDevice();	    
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -63,17 +64,28 @@ void HelloTriangleApplication::createInstance(void){
 		    createInfo.enabledLayerCount = 
 			    	static_cast<uint32_t>(validationLayers.size());
 		    createInfo.ppEnabledLayerNames = validationLayers.data();
-                    // add Debug messenger data here
+                    // add Debug messenger data here.  This is stored in this
+                    // function so just call it again.
 		    populateDebugMessengerCreateInfo(debugCreateInfo);
 	            // pNext is a type const void*, a pointer to void. The
 	            // pointer to debugCreateInfo is cast to a pointer of the
-	            // same type.  I think this cast is for clarity.
+	            // same type.  I think this cast is for clarity. pNext would
+	            // hold a linked list of structures.  Here it stores the
+	            // VkDebugUtilsMessengerCreateInfoEXT structure to hold what
+	            // to look for
+                    // This pointer is not needed for getting the callback to
+                    // work. Not sure why this is hear at all. The three
+                    // commands all allow the callback to work.
 		    createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)
 					&debugCreateInfo; 
+		   // createInfo.pNext = (void*)
+					&debugCreateInfo;
+		    //createInfo.pNext = nullptr; 
 	    } else {
 		    createInfo.enabledLayerCount = 0;
 		    createInfo.pNext  = nullptr;
 	    }
+             // createInfo gets loaded into the instance
 	    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS){
 		    	throw std::runtime_error("failed to create instance!");
 	    }
@@ -111,7 +123,20 @@ void HelloTriangleApplication::pickPhysicalDevice(void){
 		throw std::runtime_error("failed to find a suitable GPU!");
 	   }
     }
-
+void HelloTriangelApplication::createLogicalDevice(){
+        // here we call this again rather than getting a cached version.
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+	VkDeviceQueueCreateInfo queueCreateInfo;
+	queueCreateInfo.sType 
+			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+	queueCreateInfo.queueCount = 1;
+	float queuePriority = 1.0f;
+	queueCreateInfo.pQueuePriorities = &queuePriority;
+	VkPhysicalDeviceFeatures deviceFeatures{};
+	VkDeviceCreateInfo createInfo{};
+	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+}
 void HelloTriangleApplication::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
 			glfwPollEvents();
@@ -135,12 +160,14 @@ bool checkValidationLayerSupport() {
 
 	std::vector<VkLayerProperties> availableLayers(layerCount);
 	vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
-	
+	std::cout << "Validation Layers Found and Needed: ";
 	for (const char* layerName: validationLayers){
 		bool layerFound = false;
 		for (const auto& layerProperties : availableLayers){
 			if (strcmp(layerName, layerProperties.layerName) == 0) {
 				layerFound = true;
+				std::cout << layerProperties.layerName <<
+					std::endl;
 				break;
 			}
 		}
@@ -155,13 +182,17 @@ bool checkValidationLayerSupport() {
 std::vector<const char*> getRequiredExtensions() {
     uint32_t glfwExtensionCount = 0;
     const char** glfwExtensions;
+    // this function initialized both glfwExtensionCount to the number of
+    // nonzero extensions needed and glfwExtensions to this routine.
+    // glfwExtensions are allocated by the glfw Function and also freed by that
+    // function.  We should not delete this array.
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     //This constructor uses iterators, so the double pointer is the first and
-    //the second is the last pointer
+    //the second is the last pointer.  Copy the extensions locally.
     std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
 
     if (enableValidationLayers) {
-//	This sets up a debug messenger iwth a callback. The macro below becomes
+//	This sets up a debug messenger with a callback. The macro below becomes
 //	the string literal "VK_EXT_debug_utils" 
 
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
@@ -187,12 +218,26 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 	    std::vector<VkExtensionProperties> extensions(extensionCount);
             vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, 
 			extensions.data());
-	    std::cout << "available extensions:\n";
-	    for (const auto& extension: extensions){
+	    std::cout << "Number of extensions available: "
+                       << extensions.size() << std::endl;
+	   // In order to print out available extensions
+	   for (const auto& extension: extensions){
 		std::cout << '\t' << extension.extensionName << '\n';
-	    }
+	    } //*/
 	    // check if required extensions are there:
-	   std::cout << createInfo.enabledExtensionCount  << " extensions Required. They are:\n";
+	   switch(createInfo.enabledExtensionCount){
+	   case 0:
+		std::cout << "No extensions Required" << std::endl;
+		break;
+	   case 1:
+                std::cout << "One extension required. It is:";
+                break;
+	   default:
+		std::cout << "Extensions Required: " <<
+			createInfo.enabledExtensionCount<< ". They are:"
+                        << std::endl;
+                break;
+	 }
 	   for (uint32_t i = 0; i < createInfo.enabledExtensionCount; ++i){
 		std::cout << '\t' << createInfo.ppEnabledExtensionNames[i] <<
 			'\t';
@@ -202,15 +247,32 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 				found = true;
 			}
 		}
-		std::cout << (found? "Found": "Not Found") << std::endl;
-		if (!found){
+		std::cout << (found? " Found": "Not Found") << std::endl;
+		if (!found){ // fail with false if not found
 			return found;
 		}
 	  }
 	  return true;
 }
-VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
-    const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
+//in VkDebugUtilsMessengerCreateInfoEXT this fills in the sType, the
+//messageSeverity field, the messageType and the callback function
+void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
+    createInfo = {};
+    //VK_STRUCTURE_TYPE is a signature for sType field.
+	createInfo.sType  = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
+			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
+                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+        createInfo.pfnUserCallback = debugCallback;
+        createInfo.pUserData = nullptr; // Optional   
+}
+VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, 
+	const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, 
+    	const VkAllocationCallbacks* pAllocator, 
+	VkDebugUtilsMessengerEXT* pDebugMessenger) {
     
 //vkGetInstanceProcAddr gets a pointer to any function in Vulkan.  The
 //parentheses cast that pointer which is of type  PFN_vkVoidFunction to the type
@@ -225,25 +287,14 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
     }
 }
 //destroy function.
-void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, 
-const VkAllocationCallbacks* pAllocator) {
-    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+void DestroyDebugUtilsMessengerEXT(VkInstance instance, 
+		VkDebugUtilsMessengerEXT debugMessenger, 
+		const VkAllocationCallbacks* pAllocator) {
+    auto func = (PFN_vkDestroyDebugUtilsMessengerEXT) 
+	vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
     if (func != nullptr) {
         func(instance, debugMessenger, pAllocator);
     }
-}
-void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo) {
-    createInfo = {};
-    //VK_STRUCTURE_TYPE is a signature for sType field.
-	createInfo.sType  = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-	createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
-				     VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
-                                     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-        createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | 
-			         VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT | 
-                                 VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-        createInfo.pfnUserCallback = debugCallback;
-        createInfo.pUserData = nullptr; // Optional   
 }
 
 // debugCallback with a standard signature.
@@ -257,17 +308,20 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
     VkDebugUtilsMessageTypeFlagsEXT messageType,
     const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
     void* pUserData) {
-
-    std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
-
+    if (messageSeverity >= 
+		VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+    {
+	 std::cerr << "validation layer: " 
+				<< pCallbackData->pMessage << std::endl;
+    }
     return VK_FALSE;
 }
 
 
-//create a device check function
+//create a device check function. indices are not returned by this function.
 bool isDeviceSuitable(VkPhysicalDevice device){
-	VkPhysicalDeviceProperties deviceProperties;
-        VkPhysicalDeviceFeatures deviceFeatures;
+	VkPhysicalDeviceProperties deviceProperties{};
+        VkPhysicalDeviceFeatures deviceFeatures{};
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
 	vkGetPhysicalDeviceFeatures(device, &deviceFeatures);
 	bool deviceSuitable {true};
@@ -303,3 +357,5 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device){
 
 	return indices;
 }
+
+
