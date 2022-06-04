@@ -85,7 +85,8 @@ private:
     // in C++ 11 members can be initialized like this.
     VkPhysicalDevice physicalDevice {VK_NULL_HANDLE};
     // logical device
-    VkDevice  device{};
+    VkDevice  device;
+    VkQueue graphicsQueue;
     void pickPhysicalDevice(void);
     void initVulkan(void);
     void createLogicalDevice();

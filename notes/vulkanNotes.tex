@@ -72,7 +72,9 @@ available to vulkan.
 \item[Layers] are for
 debugging, parameter validation and logging and printing. Hello triangle uses
 one layer that starts many of them called  
-
+\begin{verbatim}
+VK_LAYER_KHRONOS_validation
+\end{verbatim}
 \item[Extensions]
 Adds features to vulkan by incorporating functions and software into the api.
 There are \emph{instance} extensions that enhance all of Vulkan, and
@@ -158,6 +160,19 @@ In the hello Triangle code, pDebugMessenger is saved in the class.  There is
 also a pointer to the createInfo structure saved in pNext in the instance, but
 that does not seem needed at all at this stage.  Finally, you need to destroy
 the callback when its all through with another function call.
+\section{Queue Families}
+Devices have Queue famililies that each take commands to do work. 
 
+You can start by finding out how many queues and their properties.  
+\begin{verbatim}
+vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount,
+		queueFamilies.data());
+\end{verbatim}
+The array of structures that this fills in is:
+\begin{verbatim}
+ VkQueueFamilyProperties
+\end{verbatim}
+which has a field \verb|VkQueueFlags|, that has four bits set that are defined.
+Graphics cues have \verb|VK_QUEUE_GRAPHICS_BIT|.
 
 \end{document}

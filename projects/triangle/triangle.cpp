@@ -123,7 +123,7 @@ void HelloTriangleApplication::pickPhysicalDevice(void){
 		throw std::runtime_error("failed to find a suitable GPU!");
 	   }
     }
-void HelloTriangelApplication::createLogicalDevice(){
+void HelloTriangleApplication::createLogicalDevice(){
         // here we call this again rather than getting a cached version.
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 	VkDeviceQueueCreateInfo queueCreateInfo;
@@ -136,6 +136,25 @@ void HelloTriangelApplication::createLogicalDevice(){
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	createInfo.pQueueCreateInfos = &queueCreateInfo;
+	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = nullptr;
+	createInfo.queueCreateInfoCount = 0;
+	createInfo.pEnabledFeatures = &deviceFeatures;
+	createInfo.enabledExtensionCount = 0;
+	if (enableValidationLayers) {
+		createInfo.enabledLayerCount = static_cast<uint32_t>(
+			 validationLayers.size());
+		createInfo.ppEnabledLayerNames = validationLayers.data();
+	} else {
+		createInfo.enabledLayerCount = 0;
+	}
+	if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) !=
+		VK_SUCCESS) {
+		throw std::runtime_error("failed to create logical device!");
+	}
+        //	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
+        //				&graphicsQueue);
 }
 void HelloTriangleApplication::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
@@ -148,6 +167,7 @@ void HelloTriangleApplication::cleanup(void) {
 	if (enableValidationLayers) {
         	DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     	}
+	vkDestroyDevice(device, nullptr);
         vkDestroyInstance(instance, nullptr);
 	glfwDestroyWindow(window);
 	glfwTerminate();
@@ -329,11 +349,13 @@ bool isDeviceSuitable(VkPhysicalDevice device){
 		VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
 		deviceFeatures.geometryShader;
 	QueueFamilyIndices indices = findQueueFamilies(device);
-	//call isComplet to get has_value called.
+	//call isComplete to get has_value called.
         return deviceSuitable && indices.isComplete();
 }
 
-//find appropriate queue for graphics commands
+//find appropriate queue for graphics commands. This finds the cues, and checks
+//the flags to see if they support graphics.  It returns the first successful
+//cue.
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device){
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
