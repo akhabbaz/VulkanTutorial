@@ -6,7 +6,11 @@ project(Triangle VERSION 1.2)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 configure_file(triangleConfig.h.in include/triangleConfig.h @ONLY)
-
+# add debug information to compile type.  Not defined and debug works but the
+# symbols may not be defined.  Set to Release and the validation layer is not
+# loaded.  That is to shut off debug information.  Set to Debug and one can
+# single step through application.
+set(CMAKE_BUILD_TYPE Debug)
 
 # add executable  triangle has the helloTriangle class, and triangleMain has the
 # main run loop

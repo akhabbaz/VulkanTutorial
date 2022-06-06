@@ -126,7 +126,10 @@ void HelloTriangleApplication::pickPhysicalDevice(void){
 void HelloTriangleApplication::createLogicalDevice(){
         // here we call this again rather than getting a cached version.
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-	VkDeviceQueueCreateInfo queueCreateInfo;
+	VkDeviceQueueCreateInfo queueCreateInfo{};
+	//zero pNext and flags
+	queueCreateInfo.pNext = nullptr;
+	queueCreateInfo.flags = 0;
 	queueCreateInfo.sType 
 			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
 	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
@@ -136,10 +139,11 @@ void HelloTriangleApplication::createLogicalDevice(){
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+	//zero pNext and flags
+	createInfo.pNext = nullptr;
+	createInfo.flags = 0;
 	createInfo.pQueueCreateInfos = &queueCreateInfo;
 	createInfo.queueCreateInfoCount = 1;
-	createInfo.pQueueCreateInfos = nullptr;
-	createInfo.queueCreateInfoCount = 0;
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledExtensionCount = 0;
 	if (enableValidationLayers) {
