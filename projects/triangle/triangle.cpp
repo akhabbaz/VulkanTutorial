@@ -9,7 +9,7 @@ void HelloTriangleApplication::initVulkan(void) {
             createInstance();
 	    setupDebugMessenger();
 	    pickPhysicalDevice();
-            createLogicalDevice();	    
+	    createLogicalDevice();	    
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -127,7 +127,8 @@ void HelloTriangleApplication::createLogicalDevice(){
         // here we call this again rather than getting a cached version.
 	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
 	VkDeviceQueueCreateInfo queueCreateInfo{};
-	//zero pNext and flags
+	//zero pNext and flags. Necessary here because otherwise we get a
+	// segmentation fault.
 	queueCreateInfo.pNext = nullptr;
 	queueCreateInfo.flags = 0;
 	queueCreateInfo.sType 
@@ -136,6 +137,7 @@ void HelloTriangleApplication::createLogicalDevice(){
 	queueCreateInfo.queueCount = 1;
 	float queuePriority = 1.0f;
 	queueCreateInfo.pQueuePriorities = &queuePriority;
+	// so far we are not requiring any features nor are we enabling any.
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	VkDeviceCreateInfo createInfo{};
 	createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -159,6 +161,8 @@ void HelloTriangleApplication::createLogicalDevice(){
 	}
         //	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
         //				&graphicsQueue);
+	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
+		&graphicsQueue);
 }
 void HelloTriangleApplication::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
