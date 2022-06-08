@@ -6,23 +6,23 @@ void HelloTriangleApplication::run() {
         cleanup();
     }
 void HelloTriangleApplication::initVulkan(void) {
-            createInstance();
-	    setupDebugMessenger();
-	    pickPhysicalDevice();
-	    createLogicalDevice();	    
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
 	     }
-	     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-	     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
-	     window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+	    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+	    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
+	    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+            createInstance();
+	    setupDebugMessenger();
+	    createSurface();
+	    pickPhysicalDevice();
+	    createLogicalDevice();	    
 }
 
 void HelloTriangleApplication::setupDebugMessenger(void){
 	if (!enableValidationLayers) return;
 	VkDebugUtilsMessengerCreateInfoEXT createInfo{};
-        
        populateDebugMessengerCreateInfo(createInfo);
        if (CreateDebugUtilsMessengerEXT(instance, &createInfo, 
 			nullptr, &debugMessenger) != VK_SUCCESS) {
@@ -93,6 +93,21 @@ void HelloTriangleApplication::createInstance(void){
 	    if (!requiredExtensionsFound(createInfo)){
 		throw std::runtime_error("Required extensions not found!");
 	    }
+}
+void HelloTriangleApplication::createSurface(void){
+	   /* This top code actually works in Windows.  It produces the surface. The 
+	    * bottom code is more general.
+	   VkWin32SurfaceCreateInfoKHR createInfo{};
+	   createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+	   createInfo.hwnd = glfwGetWin32Window(window);
+	   createInfo.hinstance = GetModuleHandle(nullptr);
+	   if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS){
+		   throw std::runtime_error("failed to create Windows Surface");
+		   } 
+	   */ 
+	   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
+		   throw std::runtime_error("failed to create Windows Surface");
+	   } 
 }
 void HelloTriangleApplication::pickPhysicalDevice(void){
            uint32_t deviceCount = 0;
@@ -176,6 +191,7 @@ void HelloTriangleApplication::cleanup(void) {
         	DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
     	}
 	vkDestroyDevice(device, nullptr);
+	vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
 	glfwDestroyWindow(window);
 	glfwTerminate();
