@@ -96,18 +96,23 @@ void HelloTriangleApplication::createInstance(void){
 }
 void HelloTriangleApplication::createSurface(void){
 	   /* This top code actually works in Windows.  It produces the surface. The 
-	    * bottom code is more general.
+	    * bottom code*/
+#ifdef WIN32
 	   VkWin32SurfaceCreateInfoKHR createInfo{};
 	   createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
 	   createInfo.hwnd = glfwGetWin32Window(window);
 	   createInfo.hinstance = GetModuleHandle(nullptr);
+	   std::cout << "Windows Surface" << std::endl;
 	   if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS){
 		   throw std::runtime_error("failed to create Windows Surface");
 		   } 
-	   */ 
+#else 
+	   std::cout<< "General Surface" << std::endl;
 	   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
 		   throw std::runtime_error("failed to create Windows Surface");
 	   } 
+#endif
+
 }
 void HelloTriangleApplication::pickPhysicalDevice(void){
            uint32_t deviceCount = 0;

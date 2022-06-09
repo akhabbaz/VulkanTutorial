@@ -1,8 +1,17 @@
+
+
+//This adds a version number to use 
+#include "triangleConfig.h"
+#ifdef WIN32
 #define VK_USE_PLATFORM_WIN32_KHR
 #define GLFW_INCLUDE_VULKAN
 #include <GLFW/glfw3.h>
 #define GLFW_EXPOSE_NATIVE_WIN32
 #include <GLFW/glfw3native.h>
+#else
+#define GLFW_INCLUDE_VULKAN
+#include <GLFW/glfw3.h>
+#endif
 #include <iostream>
 #include <stdexcept>
 #include <cstdlib>
@@ -11,8 +20,6 @@
 #include <optional> // adds has_value to any type to distinguish case of 
 		    // invalid entry or not initialized.
 
-//This adds a version number to use 
-#include "triangleConfig.h"
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 //

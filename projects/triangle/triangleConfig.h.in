@@ -1,3 +1,5 @@
 // the configured options and settings
 #define Triangle_VERSION_MAJOR @Triangle_VERSION_MAJOR@
 #define Triangle_VERSION_MINOR @Triangle_VERSION_MINOR@
+//this will define WIN32 in the include file if windows system 
+//#cmakedefine WIN32
