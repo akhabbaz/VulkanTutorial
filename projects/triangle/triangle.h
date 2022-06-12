@@ -82,9 +82,13 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 //holds indices into Queue families
 struct QueueFamilyIndices{
 	std::optional<uint32_t> graphicsFamily;
+	//find a queue that can present images to the 
+	// surface we created.
+	std::optional<uint32_t> presentFamily;
 	//isComplete checks has_value
 	bool isComplete(){
-		return graphicsFamily.has_value();
+		return graphicsFamily.has_value() && 
+			presentFamily.has_value();
 	}
 };
 /***************************/
@@ -105,6 +109,7 @@ private:
     VkQueue graphicsQueue;
     VkSurfaceKHR surface;
     void pickPhysicalDevice(void);
+    void initWindow(void);
     void initVulkan(void);
     void createSurface(void);
     void createLogicalDevice();

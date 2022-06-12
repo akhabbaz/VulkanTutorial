@@ -1,11 +1,12 @@
 #include "triangle.h"
 /*  Class member functions */
 void HelloTriangleApplication::run() {
+	initWindow();
         initVulkan();
         mainLoop();
         cleanup();
     }
-void HelloTriangleApplication::initVulkan(void) {
+void HelloTriangleApplication::initWindow(){	
 	    if(!glfwInit())
 	     {
 		throw std::runtime_error("init failed");
@@ -13,6 +14,8 @@ void HelloTriangleApplication::initVulkan(void) {
 	    glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 	    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 	    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+}
+void HelloTriangleApplication::initVulkan(void) {
             createInstance();
 	    setupDebugMessenger();
 	    createSurface();
