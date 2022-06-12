@@ -27,6 +27,10 @@ const std::vector<const char*> validationLayers = {
 //This layer has standard Vulkan validation functions
 	"VK_LAYER_KHRONOS_validation"
 };
+//list of required extensions:
+const std::vector<const char *> deviceExtensions = {
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
 #ifdef NDEBUG
 	const bool enableValidationLayers = false;
 #else
@@ -70,6 +74,8 @@ createInfo);
 
 //create a device check function
 bool isDeviceSuitable(VkPhysicalDevice device);
+//check if the extensions are supported
+bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 /************************************************/
 /* Queue Family Functions  */
 /**************************/

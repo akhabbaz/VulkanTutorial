@@ -378,10 +378,18 @@ bool isDeviceSuitable(VkPhysicalDevice device){
 		VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
 		deviceFeatures.geometryShader;
 	QueueFamilyIndices indices = findQueueFamilies(device);
+	bool extensionsSupported = checkDeviceExtensionSupport(device);
 	//call isComplete to get has_value called.
-        return deviceSuitable && indices.isComplete();
+        return deviceSuitable && indices.isComplete() && extensionsSupported;
 }
 
+//check if the extensions are supported
+bool checkDeviceExtensionSupport(VkPhysicalDevice device){
+	uint32_t extensionCount;
+
+
+	return true;
+}
 //find appropriate queue for graphics commands. This finds the cues, and checks
 //the flags to see if they support graphics.  It returns the first successful
 //cue.
