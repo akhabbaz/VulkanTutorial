@@ -97,6 +97,7 @@ void HelloTriangleApplication::createInstance(void){
 		throw std::runtime_error("Required extensions not found!");
 	    }
 }
+// this only requires the instance, the surface and the window
 void HelloTriangleApplication::createSurface(void){
 	   /* This top code actually works in Windows.  It produces the surface. The 
 	    * bottom code*/
@@ -137,7 +138,7 @@ void HelloTriangleApplication::pickPhysicalDevice(void){
            }
 
 	   for (const auto& device :devices){
-		if (isDeviceSuitable(device)) {
+		if (isDeviceSuitable(device, surface)) {
 		 	physicalDevice = device;
 			break;
 		}
@@ -148,18 +149,31 @@ void HelloTriangleApplication::pickPhysicalDevice(void){
     }
 void HelloTriangleApplication::createLogicalDevice(){
         // here we call this again rather than getting a cached version.
-	QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
-	VkDeviceQueueCreateInfo queueCreateInfo{};
-	//zero pNext and flags. Necessary here because otherwise we get a
-	// segmentation fault.
-	queueCreateInfo.pNext = nullptr;
-	queueCreateInfo.flags = 0;
-	queueCreateInfo.sType 
-			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-	queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
-	queueCreateInfo.queueCount = 1;
+	QueueFamilyIndices indices = findQueueFamilies(physicalDevice, surface);
+	//create potentially more than one VkDeviceQueueCreateInfo
+	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+	// this set may be one element or two; it will be sorted from lowest to
+	// highest. If the present and graphicsFamily are the same, there will
+	// be just one. It doesn't matter much the order. One can test later as
+	// whether this index supports presentation and also whether it is a
+	// graphicsFamily.  If there is only one, it has to.  If there are two
+	// one can test for presentation only.
+	std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), 
+					indices.presentFamily.value()};
 	float queuePriority = 1.0f;
-	queueCreateInfo.pQueuePriorities = &queuePriority;
+	for (uint32_t queueFamily : uniqueQueueFamilies){
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		//zero pNext and flags. Necessary here because otherwise we get a
+		// segmentation fault.
+		queueCreateInfo.sType 
+			= VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.pNext = nullptr;
+		queueCreateInfo.flags = 0;
+		queueCreateInfo.queueFamilyIndex = queueFamily;
+		queueCreateInfo.queueCount = 1;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+		queueCreateInfos.push_back(queueCreateInfo);
+	}
 	// so far we are not requiring any features nor are we enabling any.
 	VkPhysicalDeviceFeatures deviceFeatures{};
 	VkDeviceCreateInfo createInfo{};
@@ -167,8 +181,9 @@ void HelloTriangleApplication::createLogicalDevice(){
 	//zero pNext and flags
 	createInfo.pNext = nullptr;
 	createInfo.flags = 0;
-	createInfo.pQueueCreateInfos = &queueCreateInfo;
-	createInfo.queueCreateInfoCount = 1;
+	createInfo.pQueueCreateInfos = queueCreateInfos.data();
+	createInfo.queueCreateInfoCount = static_cast<uint32_t>
+		(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
 	createInfo.enabledExtensionCount = 0;
 	if (enableValidationLayers) {
@@ -186,6 +201,8 @@ void HelloTriangleApplication::createLogicalDevice(){
         //				&graphicsQueue);
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
 		&graphicsQueue);
+	vkGetDeviceQueue(device, indices.presentFamily.value(), 0,
+		&presentQueue);
 }
 void HelloTriangleApplication::mainLoop() {
 		while (!glfwWindowShouldClose(window)) {
@@ -295,7 +312,8 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 			'\t';
 		bool found{};
 		for (const auto& extension:extensions){
-			if (strcmp(extension.extensionName, createInfo.ppEnabledExtensionNames[i])== 0){
+			if (strcmp(extension.extensionName, 
+				createInfo.ppEnabledExtensionNames[i])== 0){
 				found = true;
 			}
 		}
@@ -371,7 +389,7 @@ static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(
 
 
 //create a device check function. indices are not returned by this function.
-bool isDeviceSuitable(VkPhysicalDevice device){
+bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface){
 	VkPhysicalDeviceProperties deviceProperties{};
         VkPhysicalDeviceFeatures deviceFeatures{};
 	vkGetPhysicalDeviceProperties(device, &deviceProperties);
@@ -380,7 +398,7 @@ bool isDeviceSuitable(VkPhysicalDevice device){
 	deviceSuitable == deviceSuitable && deviceProperties.deviceType ==
 		VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU && 
 		deviceFeatures.geometryShader;
-	QueueFamilyIndices indices = findQueueFamilies(device);
+	QueueFamilyIndices indices = findQueueFamilies(device, surface);
 	bool extensionsSupported = checkDeviceExtensionSupport(device);
 	//call isComplete to get has_value called.
         return deviceSuitable && indices.isComplete() && extensionsSupported;
@@ -396,7 +414,7 @@ bool checkDeviceExtensionSupport(VkPhysicalDevice device){
 //find appropriate queue for graphics commands. This finds the cues, and checks
 //the flags to see if they support graphics.  It returns the first successful
 //cue.
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device){
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface){
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, 
@@ -410,6 +428,16 @@ QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device){
     		if (queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
         		indices.graphicsFamily = i;
     		}
+		//check also if this queue supports Surface
+		VkBool32 presentSupport = false;
+		//checks if the family index supports the surface. Pass this 
+		// the device, the index, and the surface.  Returns true or
+		// false as a boolean.
+		vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, 
+			&presentSupport);
+		if (presentSupport){
+			indices.presentFamily = i;
+		}
 		if (indices.isComplete()){
 			 break;
 		}

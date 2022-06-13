@@ -19,7 +19,7 @@
 #include <cstring>
 #include <optional> // adds has_value to any type to distinguish case of 
 		    // invalid entry or not initialized.
-
+#include <set>
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 //
@@ -72,8 +72,10 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT&
 createInfo);
 
-//create a device check function
-bool isDeviceSuitable(VkPhysicalDevice device);
+//create a device check function.  Also we find QueueFamilyIndices here so in
+//addition we pass in a surface to see if the Queue is presentable.
+bool isDeviceSuitable(VkPhysicalDevice device, 
+		VkSurfaceKHR surface);
 //check if the extensions are supported
 bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 /************************************************/
@@ -93,8 +95,10 @@ struct QueueFamilyIndices{
 };
 /***************************/
 
-//find appropriate queue for graphics commands
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+//find appropriate queue for graphics commands. The surface is to check if the
+//index is presentable.
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, 
+		VkSurfaceKHR surface);
 class HelloTriangleApplication {
 public:
     void run();
@@ -107,7 +111,10 @@ private:
     // logical device
     VkDevice  device;
     VkQueue graphicsQueue;
+    // need a surface to draw on.
     VkSurfaceKHR surface;
+    // presentQueue
+    VkQueue presentQueue;
     void pickPhysicalDevice(void);
     void initWindow(void);
     void initVulkan(void);
