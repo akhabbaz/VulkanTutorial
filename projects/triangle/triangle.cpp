@@ -100,10 +100,16 @@ void HelloTriangleApplication::createInstance(void){
 // this only requires the instance, the surface and the window
 void HelloTriangleApplication::createSurface(void){
 	   /* This top code actually works in Windows.  It produces the surface. The 
-	    * bottom code*/
+	    * bottom code works too is more general but uses glfw functions.
+	    * The top code is documented under "Presentation on Microsoft
+	    * Windows" Vulkan Programming guide*/
 #ifdef WIN32
 	   VkWin32SurfaceCreateInfoKHR createInfo{};
 	   createInfo.sType = VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR;
+			/* book says = VK_STRUCTURE_TYPE_DISPLAY_SURFACE_CREATE
+				 _INFO_KHR */
+	   createInfo.pNext = nullptr;
+           createInfo.flags = 0;
 	   createInfo.hwnd = glfwGetWin32Window(window);
 	   createInfo.hinstance = GetModuleHandle(nullptr);
 	   std::cout << "Windows Surface" << std::endl;
@@ -112,6 +118,7 @@ void HelloTriangleApplication::createSurface(void){
 		   } 
 #else 
 	   std::cout<< "General Surface" << std::endl;
+	   // this general one uses a glfw object, not a Vulkan object.
 	   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
 		   throw std::runtime_error("failed to create Windows Surface");
 	   } 
@@ -199,6 +206,11 @@ void HelloTriangleApplication::createLogicalDevice(){
 	}
         //	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
         //				&graphicsQueue);
+	// notice here that the the queue family index is already correct,
+	// because that has already passed in findQueueFamilies.
+	// the second index is the queue within that family.  We will take the
+	// first queue, index 0. After this the graphics, presentQueue already
+	// have their correct index.
 	vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0,
 		&graphicsQueue);
 	vkGetDeviceQueue(device, indices.presentFamily.value(), 0,
@@ -407,14 +419,16 @@ bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface){
 //check if the extensions are supported
 bool checkDeviceExtensionSupport(VkPhysicalDevice device){
 	uint32_t extensionCount;
-
+ 	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
+nullptr);
 
 	return true;
 }
 //find appropriate queue for graphics commands. This finds the cues, and checks
 //the flags to see if they support graphics.  It returns the first successful
 //cue.
-QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface){
+QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, 
+			VkSurfaceKHR surface){
 	QueueFamilyIndices indices;
 	uint32_t queueFamilyCount = 0;
 	vkGetPhysicalDeviceQueueFamilyProperties(device, 

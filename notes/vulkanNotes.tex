@@ -174,5 +174,25 @@ The array of structures that this fills in is:
 \end{verbatim}
 which has a field \verb|VkQueueFlags|, that has four bits set that are defined.
 Graphics cues have \verb|VK_QUEUE_GRAPHICS_BIT|.
+\section{Surface creation}
+
+The steps are rouphly
+\begin{enumerate}
+\item check if device and queue support presentation.
+	In windows this is a call to
+	\begin{verbatim}
+	vkGetPhysicalDeviceWin32PresentationSupportKHR.
+	\end{verbatim}
+	This requires the physical device and an index for a queue family and
+returns VkBool32, a boolean indicating success or failure.  If you don't have a
+device that supports surfaces, there is no point in going on.
+\item Create a surface
+	\begin{verbatim}
+	vkCreateWin32SurfaceKHR
+	\end{verbatim}
+	This requires and instance (VkInstance) and a structure that has Windows
+information and it creates a surface. 
+\item  fill in the required structure. In windows this is
+VKWin32SurfaceCreateInfoKHR. It has the HWIND and HINSTANCE of the window.
 
 \end{document}

@@ -1,5 +1,3 @@
-
-
 //This adds a version number to use 
 #include "triangleConfig.h"
 #ifdef WIN32
