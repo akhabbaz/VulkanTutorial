@@ -192,7 +192,9 @@ void HelloTriangleApplication::createLogicalDevice(){
 	createInfo.queueCreateInfoCount = static_cast<uint32_t>
 		(queueCreateInfos.size());
 	createInfo.pEnabledFeatures = &deviceFeatures;
-	createInfo.enabledExtensionCount = 0;
+	createInfo.enabledExtensionCount =
+			static_cast<uint32_t>(deviceExtensions.size());
+	createInfo.ppEnabledExtensionNames = deviceExtensions.data();
 	if (enableValidationLayers) {
 		createInfo.enabledLayerCount = static_cast<uint32_t>(
 			 validationLayers.size());
@@ -278,7 +280,7 @@ std::vector<const char*> getRequiredExtensions() {
 
         extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
     }
-    std::cout << "Required Extensions:" << std::endl;
+    std::cout << "Required Instance Extensions:" << std::endl;
     for (const char * oneExt: extensions)
 	std::cout << oneExt << '\t';
     std::cout << std::endl;
@@ -299,7 +301,7 @@ bool requiredExtensionsFound(VkInstanceCreateInfo& createInfo)
 	    std::vector<VkExtensionProperties> extensions(extensionCount);
             vkEnumerateInstanceExtensionProperties(nullptr, &extensionCount, 
 			extensions.data());
-	    std::cout << "Number of extensions available: "
+	    std::cout << "Number of instance extensions available: "
                        << extensions.size() << std::endl;
 	   // In order to print out available extensions
 	   for (const auto& extension: extensions){
@@ -420,9 +422,18 @@ bool isDeviceSuitable(VkPhysicalDevice device, VkSurfaceKHR surface){
 bool checkDeviceExtensionSupport(VkPhysicalDevice device){
 	uint32_t extensionCount;
  	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount,
-nullptr);
+		nullptr);
 
-	return true;
+	std::cout << "Device Extensions Found: " << extensionCount << std::endl; 
+	std::vector<VkExtensionProperties> availableExtensions(extensionCount);
+	vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, 
+		availableExtensions.data());
+	std::set<std::string> requiredExtensions( deviceExtensions.begin(),
+			deviceExtensions.end());
+	for (const VkExtensionProperties& extension: availableExtensions){
+		requiredExtensions.erase(extension.extensionName);
+ 	}
+	return requiredExtensions.empty();
 }
 //find appropriate queue for graphics commands. This finds the cues, and checks
 //the flags to see if they support graphics.  It returns the first successful
