@@ -91,12 +91,22 @@ struct QueueFamilyIndices{
 			presentFamily.has_value();
 	}
 };
+//holds some of the info we need about the swap chains.
+struct SwapChainSupportDetails {
+	VkSurfaceCapabilitiesKHR capabilities;
+	std::vector<VkSurfaceFormatKHR> formats;
+	std::vector<VkPresentModeKHR> presentModes;
+};
 /***************************/
 
 //find appropriate queue for graphics commands. The surface is to check if the
 //index is presentable.
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, 
 		VkSurfaceKHR surface);
+//Get the swap chain support details:
+SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device,
+VkSurfaceKHR surface);
+
 class HelloTriangleApplication {
 public:
     void run();
