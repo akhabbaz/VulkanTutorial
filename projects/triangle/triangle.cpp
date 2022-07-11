@@ -37,7 +37,8 @@ void HelloTriangleApplication::createInstance(void){
 	    if (enableValidationLayers){
 		    std::cout<< "Validation Layers enabled" << std::endl;
 		    if (!checkValidationLayerSupport()){
-			    throw std::runtime_error("validation layers requested, but not available");
+			    throw std::runtime_error("validation layers "
+				"requested, but not available");
 		    }
 	    }
 	    VkApplicationInfo appInfo{};
@@ -55,7 +56,8 @@ void HelloTriangleApplication::createInstance(void){
 	    VkInstanceCreateInfo createInfo{};
 	    createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
 	    createInfo.pApplicationInfo = &appInfo;
-	    //use routine below to get required and call back extensions
+	    //use routine below to get required and call back extensions;
+	   // these are glfw required extensions
 	    auto extensions = getRequiredExtensions();
 	
 	    createInfo.enabledExtensionCount =
