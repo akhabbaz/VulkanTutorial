@@ -115,13 +115,15 @@ void HelloTriangleApplication::createSurface(void){
 	   createInfo.hwnd = glfwGetWin32Window(window);
 	   createInfo.hinstance = GetModuleHandle(nullptr);
 	   std::cout << "Windows Surface" << std::endl;
-	   if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) != VK_SUCCESS){
+	   if (vkCreateWin32SurfaceKHR(instance, &createInfo, nullptr, &surface) 
+			   != VK_SUCCESS){
 		   throw std::runtime_error("failed to create Windows Surface");
 		   } 
 #else 
 	   std::cout<< "General Surface" << std::endl;
 	   // this general one uses a glfw object, not a Vulkan object.
-	   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS){
+	   if (glfwCreateWindowSurface(instance, window, nullptr, &surface) 
+			   != VK_SUCCESS){
 		   throw std::runtime_error("failed to create Windows Surface");
 	   } 
 #endif
@@ -163,10 +165,9 @@ void HelloTriangleApplication::createLogicalDevice(){
 	std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
 	// this set may be one element or two; it will be sorted from lowest to
 	// highest. If the present and graphicsFamily are the same, there will
-	// be just one. It doesn't matter much the order. One can test later as
-	// whether this index supports presentation and also whether it is a
-	// graphicsFamily.  If there is only one, it has to.  If there are two
-	// one can test for presentation only.
+	// be just one. It doesn't matter much the order. 
+	// The last two commands here modify the present and the graphics queue
+	// updateing them with the correct index.
 	std::set<uint32_t> uniqueQueueFamilies = {indices.graphicsFamily.value(), 
 					indices.presentFamily.value()};
 	float queuePriority = 1.0f;
@@ -274,7 +275,8 @@ std::vector<const char*> getRequiredExtensions() {
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     //This constructor uses iterators, so the double pointer is the first and
     //the second is the last pointer.  Copy the extensions locally.
-    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
+    td::vector<const char*> extensions(glfwExtensions, glfwExtensions + 
+		    		glfwExtensionCount);
 
     if (enableValidationLayers) {
 //	This sets up a debug messenger with a callback. The macro below becomes
