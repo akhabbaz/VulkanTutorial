@@ -275,7 +275,7 @@ std::vector<const char*> getRequiredExtensions() {
     glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
     //This constructor uses iterators, so the double pointer is the first and
     //the second is the last pointer.  Copy the extensions locally.
-    td::vector<const char*> extensions(glfwExtensions, glfwExtensions + 
+    std::vector<const char*> extensions(glfwExtensions, glfwExtensions + 
 		    		glfwExtensionCount);
 
     if (enableValidationLayers) {
